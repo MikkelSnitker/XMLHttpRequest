@@ -1,0 +1,22 @@
+{
+  "name": "XMLHttpRequest",
+  "version": "0.0.1",
+  "description": "wraps node.js' http.request as XMLHttpRequest",
+  "main": "XMLHttpRequest.js",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/MikkelSnitker/XMLHttpRequest.git"
+  },
+  "author": {
+    "name": "Mikkel Snitker"
+  },
+  "scripts": {
+    "tsc": "tsc -p ."
+  },
+  "bugs": {
+    "url": "https://github.com/MikkelSnitker/XMLHttpRequest/issues"
+  },
+  "devDependencies": {
+    "typescript": "^1.7.3"
+  }
+}
