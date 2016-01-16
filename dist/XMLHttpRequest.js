@@ -77,7 +77,6 @@ var XMLHttpRequest = (function () {
             }
             else if (this.responseType === "json") {
                 try {
-                    console.log("TEST:", this._responseBuffer.length);
                     var jsonString = this._responseBuffer.toString("utf8");
                     return JSON.parse(jsonString);
                 }
@@ -203,6 +202,7 @@ var XMLHttpRequest = (function () {
         });
         req.on("response", function (message) {
             _this._response = message;
+            _this._response.setEncoding("utf8");
             lengthComputeable = (totalSize = message.headers["content-length"] || 0) > 0;
             _this._setReadyState(XMLHttpRequest.HEADERS_RECEIVED, initEvent("readystatechange", _this));
         });
