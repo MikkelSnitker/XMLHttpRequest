@@ -11,7 +11,7 @@ xhr.onreadystatechange=function(){
       console.log("CONTENT:",xhr.getResponseHeader("content-type"));
   }
 };
-xhr.responseType="json";
+//xhr.responseType="json";
 xhr.onloadstart = log.bind(console, "LOADSTART");
 
 xhr.onprogress = log.bind(console, "PROGRESS");
@@ -21,9 +21,9 @@ xhr.onabort = log.bind(console, "ABORT");
 xhr.onerror = log.bind(console, "ERROR");
 xhr.onloadend = function(){
     
- //   console.log("RESPONSE:", xhr.response);
+   console.log("RESPONSE:", xhr.response);
     
 };
 xhr.open("GET", "http://cposdev1.northeurope.cloudapp.azure.com:5984/spottd/_design/users/_view/all");
 xhr.send();
-xhr.abort();
+

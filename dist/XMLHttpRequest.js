@@ -95,7 +95,7 @@ var XMLHttpRequest = (function () {
             if (!(this.responseType == "text" || this.responseType == "")) {
                 throw new Error("Failed to read the 'responseText' property from 'XMLHttpRequest': The value is only accessible if the object's 'responseType' is '' or 'text' (was '" + this.responseType + "').");
             }
-            else if (this._readyState !== XMLHttpRequest.LOADING || this._readyState !== XMLHttpRequest.DONE) {
+            else if (!(this._readyState == XMLHttpRequest.LOADING || this._readyState == XMLHttpRequest.DONE)) {
                 return "";
             }
             else {
