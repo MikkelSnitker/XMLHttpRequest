@@ -2,7 +2,7 @@
   "name": "XMLHttpRequest",
   "version": "0.0.1",
   "description": "wraps node.js' http.request as XMLHttpRequest",
-  "main": "XMLHttpRequest.js",
+  "main": "dist/XMLHttpRequest.js",
   "repository": {
     "type": "git",
     "url": "git+https://github.com/MikkelSnitker/XMLHttpRequest.git"
