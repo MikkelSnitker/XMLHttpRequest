@@ -1,0 +1,83 @@
+var makeRequest = (_url) => {
+            var parsedUrl = url.parse(_url);
+            var options = {
+
+                hostname: parsedUrl.hostname,
+                port: parseInt(parsedUrl.port),
+                path: parsedUrl.path,
+                method: this._request.method,
+                headers: this._request.requestHeaders
+            }
+            var request: (options: http.RequestOptions, callback?: (res: http.IncomingMessage) => void) => http.ClientRequest = null;
+            if (/^https\:/i.test(parsedUrl.protocol)) {
+                request = https.request;
+            } else {
+                request = http.request;
+            }
+
+            var req = this._client = request(options, res=> {
+                this._setReadyState(XMLHttpRequest.HEADERS_RECEIVED);
+                this._events.emit("loadstart",initProgressEvent("loadstart", this));
+                this._events.emit("progress",initProgressEvent("progress", this));
+                
+                res.setEncoding('utf8');
+                var body = null;
+                res.on('data', (chunk) => {
+                    this._setReadyState(XMLHttpRequest.LOADING);
+                        this._events.emit("progress",initProgressEvent("progress", this));
+                    if (body == null) {
+                        body = chunk;
+                    } else {
+                        body += chunk;
+                    }
+
+                });
+                res.on('end', () => {
+                    if ((res.statusCode === 301 || res.statusCode === 302) && /GET|HEAD/i.test(options.method) && res.headers['location']) {
+                        makeRequest(res.headers['location']);
+                        return;
+                    } else if (res.statusCode === 401 && !this._request.authSent && (this._request.username !== null || this._request.password !== null)) {
+                        var authenticate = res.headers["www-authenticate"];
+                        var authType = authenticate && authenticate.split(" ")[0];
+                        switch (authType.toLowerCase()) {
+                            case "basic":
+                                this._request.requestHeaders["Authorization"] = [authType, new Buffer(this._request.username + ":" + this._request.password).toString('base64')].join(" ");
+                                break;
+                        }
+                    }
+
+                    this._response = {
+                        responseHeaders: res.headers,
+                        response: body,
+                        statusCode: res.statusCode,
+                        statusMessage: res.statusMessage
+
+                    }
+
+
+                    this.response = body;
+                    this.responseText = body;
+
+                    this.status = res.statusCode;
+                    this.statusText = res.statusMessage;
+                    this._setReadyState(XMLHttpRequest.DONE);
+                    this._events.emit("load",initProgressEvent("load", this));
+                    this._events.emit("loadend",initProgressEvent("loadend", this));
+
+                });
+
+                req.on('error', (e) => {
+                    this._setReadyState(XMLHttpRequest.DONE);
+                    this._events.emit("error",initProgressEvent("error", this));
+                    this._events.emit("loadend",initProgressEvent("loadend", this));
+                });
+
+            });
+
+            if (!/GET|HEAD/i.test(options.method)) {
+                req.write(data);
+            }
+            req.end();
+        };
+
+        makeRequest(this._request.url);

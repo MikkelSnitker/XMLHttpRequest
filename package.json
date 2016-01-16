@@ -11,12 +11,20 @@
     "name": "Mikkel Snitker"
   },
   "scripts": {
-    "tsc": "tsc -p ."
+    "tsc": "tsc -p src"
   },
   "bugs": {
     "url": "https://github.com/MikkelSnitker/XMLHttpRequest/issues"
   },
   "devDependencies": {
+    "chai": "^3.4.1",
+    "expect.js": "^0.3.1",
+    "express": "^4.13.3",
+    "mocha": "^2.3.4",
+    "should": "^8.1.1",
     "typescript": "^1.7.3"
+  },
+  "dependencies": {
+    "request": "^2.67.0"
   }
 }
