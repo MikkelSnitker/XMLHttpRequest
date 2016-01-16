@@ -37,7 +37,7 @@ var XMLHttpRequest = (function () {
         this._request = null;
         this._response = null;
         this._options = null;
-        this._responseBuffer = new Buffer(0);
+        this._responseBody = "";
         this._readyState = XMLHttpRequest.UNSET;
         this._responseType = "";
         this.responseXML = null;
@@ -67,7 +67,7 @@ var XMLHttpRequest = (function () {
                 return null;
             }
             else if (this.responseType === "arraybuffer") {
-                var buffer = this._responseBuffer;
+                var buffer = new Buffer(this._responseBody, "utf8");
                 var ab = new ArrayBuffer(buffer.length);
                 var view = new Uint8Array(ab);
                 for (var i = 0; i < buffer.length; ++i) {
@@ -77,14 +77,14 @@ var XMLHttpRequest = (function () {
             }
             else if (this.responseType === "json") {
                 try {
-                    var jsonString = this._responseBuffer.toString("utf8");
+                    var jsonString = this._responseBody;
                     return JSON.parse(jsonString);
                 }
                 catch (error) {
                     return null;
                 }
             }
-            return this._responseBuffer;
+            return this._responseBody;
         },
         enumerable: true,
         configurable: true
@@ -98,7 +98,7 @@ var XMLHttpRequest = (function () {
                 return "";
             }
             else {
-                return this._responseBuffer.toString("utf8");
+                return this._responseBody;
             }
         },
         enumerable: true,
@@ -166,13 +166,13 @@ var XMLHttpRequest = (function () {
         var loaded = 0;
         var totalSize = 0;
         var lengthComputeable = false;
-        this._responseBuffer = new Buffer(0);
+        this._responseBody = "";
         this._events.emit("loadstart", initProgressEvent("loadstart", this, loaded, totalSize, lengthComputeable));
         var req = this._request = request(this._options.url, { method: options.method, headers: options.headers, body: data /*, auth: { username: options.username, password: options.password } */ }, function (error, result) {
         });
         var timer = 0;
         req.on("data", function (data) {
-            _this._responseBuffer = Buffer.concat([_this._responseBuffer, data]);
+            _this._responseBody += data.toString("utf8");
             if (_this._readyState < XMLHttpRequest.HEADERS_RECEIVED) {
                 return;
             }

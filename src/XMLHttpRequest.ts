@@ -60,7 +60,7 @@ export class XMLHttpRequest implements XMLHttpRequestEventTarget {
     private _request: request.Request = null;
     private _response: http.IncomingMessage = null;
     private _options: Options = null;
-    private _responseBuffer: Buffer = new Buffer(0);
+    private _responseBody: string = "";
     constructor() {
 
     }
@@ -88,7 +88,7 @@ export class XMLHttpRequest implements XMLHttpRequestEventTarget {
             return null;
         } else if (this.responseType ==="arraybuffer") {
         
-            var buffer = this._responseBuffer;
+            var buffer = new Buffer(this._responseBody,"utf8");
             var ab = new ArrayBuffer(buffer.length);
             var view = new Uint8Array(ab);
             for (var i = 0; i < buffer.length; ++i) {
@@ -97,14 +97,14 @@ export class XMLHttpRequest implements XMLHttpRequestEventTarget {
             return ab;
         } else if (this.responseType === "json"){
             try {
-                var jsonString = this._responseBuffer.toString("utf8");
+                var jsonString = this._responseBody;
                 return JSON.parse(jsonString);
             } catch(error){
                 return null;
             }
         }
         
-        return this._responseBuffer;
+        return this._responseBody;
     }
     public get responseText(): string {
         
@@ -114,7 +114,7 @@ export class XMLHttpRequest implements XMLHttpRequestEventTarget {
         {
             return "";
         } else {
-            return this._responseBuffer.toString("utf8");  
+            return this._responseBody;  
         }
         
     }
@@ -190,7 +190,7 @@ export class XMLHttpRequest implements XMLHttpRequestEventTarget {
         var loaded = 0;
         var totalSize = 0;
         var lengthComputeable = false;
-        this._responseBuffer = new Buffer(0);
+        this._responseBody = "";
         
         this._events.emit("loadstart", initProgressEvent("loadstart", this, loaded, totalSize, lengthComputeable));
 
@@ -201,7 +201,7 @@ export class XMLHttpRequest implements XMLHttpRequestEventTarget {
         var timer = 0;
         req.on("data", (data: Buffer) => {
             
-            this._responseBuffer = Buffer.concat([this._responseBuffer, data]);
+            this._responseBody += data.toString("utf8"); 
             
             if(this._readyState < XMLHttpRequest.HEADERS_RECEIVED)
             {
