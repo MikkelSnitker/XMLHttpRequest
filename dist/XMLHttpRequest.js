@@ -66,7 +66,6 @@ var XMLHttpRequest = (function () {
                 return null;
             }
             else if (this.responseType.toLowerCase() === "arraybuffer") {
-                return this._responseBody;
                 var buffer = this._responseBody; // new Buffer(this._responseBody,"utf8");
                 var ab = new ArrayBuffer(buffer.length);
                 var view = new Uint8Array(ab);
@@ -168,7 +167,7 @@ var XMLHttpRequest = (function () {
         var lengthComputeable = false;
         this._responseBody = null;
         this._events.emit("loadstart", initProgressEvent("loadstart", this, loaded, totalSize, lengthComputeable));
-        var req = this._request = request(this._options.url, { method: options.method, headers: options.headers, body: data, encoding: null }, function (error, result, body) {
+        var req = this._request = request(this._options.url, { method: options.method, headers: options.headers, body: data, encoding: this._responseType.toLowerCase() == "arraybuffer" ? null : "UTF8" }, function (error, result, body) {
         });
         var timer = 0;
         req.pause();
