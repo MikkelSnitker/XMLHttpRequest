@@ -111,6 +111,7 @@ declare module 'request' {
 			ca?: Buffer;
 			har?: HttpArchiveRequest;
 			useQuerystring?: boolean;
+            responseType?:string;
 		}
 
 		interface UriOptions {

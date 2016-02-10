@@ -60,7 +60,7 @@ export class XMLHttpRequest implements XMLHttpRequestEventTarget {
     private _request: request.Request = null;
     private _response: http.IncomingMessage = null;
     private _options: Options = null;
-    private _responseBody: string = "";
+    private _responseBody: any;
     constructor() {
 
     }
@@ -86,9 +86,9 @@ export class XMLHttpRequest implements XMLHttpRequestEventTarget {
             return this.responseText;
         } else if(this._readyState !== XMLHttpRequest.DONE) {
             return null;
-        } else if (this.responseType ==="arraybuffer") {
-        
-            var buffer = new Buffer(this._responseBody,"utf8");
+        } else if (this.responseType.toLowerCase() ==="arraybuffer") {
+        return this._responseBody;
+            var buffer:Buffer = <Buffer>this._responseBody; // new Buffer(this._responseBody,"utf8");
             var ab = new ArrayBuffer(buffer.length);
             var view = new Uint8Array(ab);
             for (var i = 0; i < buffer.length; ++i) {
@@ -190,19 +190,32 @@ export class XMLHttpRequest implements XMLHttpRequestEventTarget {
         var loaded = 0;
         var totalSize = 0;
         var lengthComputeable = false;
-        this._responseBody = "";
+        this._responseBody = null;
         
         this._events.emit("loadstart", initProgressEvent("loadstart", this, loaded, totalSize, lengthComputeable));
 
-        var req = this._request = request(this._options.url, { method: options.method, headers: options.headers, body: data /*, auth: { username: options.username, password: options.password } */}, (error, result) => {
-           
+
+        var req = this._request = request(this._options.url, {method: options.method, headers: options.headers, body:data,  encoding:null }, (error, result,body) => {
+        
         });
+        
        
         var timer = 0;
+        req.pause();
         req.on("data", (data: Buffer) => {
             
-            this._responseBody += data.toString("utf8"); 
+            if(this._responseType.toLowerCase() == "arraybuffer"){
+                if(this._responseBody ==null){
+                    this._responseBody = data;
+                } else {
+                    this._responseBody = Buffer.concat([this._responseBody, data]);
+                }
+            } else {
+                if(this._responseBody == null)
+                    this._responseBody = "";
             
+                this._responseBody += data.toString("utf8"); 
+            }
             if(this._readyState < XMLHttpRequest.HEADERS_RECEIVED)
             {
                 return;
@@ -230,7 +243,7 @@ export class XMLHttpRequest implements XMLHttpRequestEventTarget {
           
         });
 
-        req.on("end", () => {
+        req.on("end", () => { 
 
             clearTimeout(timer);
             this._events.emit("progress", initProgressEvent("progress", this, loaded, totalSize, lengthComputeable));
@@ -241,8 +254,19 @@ export class XMLHttpRequest implements XMLHttpRequestEventTarget {
         });
 
         req.on("response", (message: http.IncomingMessage) => {
+            
+              /* if(this._responseType == "arrayBuffer"){
+                this._response.setEncoding('binary');
+            } else {
+                   this._response.setEncoding("utf8");
+            }*/
+            
+          
             this._response = message;
-            this._response.setEncoding("utf8");
+         
+         
+           
+             
             lengthComputeable = (totalSize = message.headers["content-length"] || 0) > 0;
             this._setReadyState(XMLHttpRequest.HEADERS_RECEIVED, initEvent("readystatechange", this));
         });
@@ -269,7 +293,7 @@ export class XMLHttpRequest implements XMLHttpRequestEventTarget {
             this._events.emit("abort", initProgressEvent("abort", this, loaded, totalSize, lengthComputeable));
             this._events.emit("loadend", initProgressEvent("loadend", this, loaded, totalSize, lengthComputeable));
         });
-
+        req.resume();
     }
 
     public setRequestHeader(header: string, value: string) {

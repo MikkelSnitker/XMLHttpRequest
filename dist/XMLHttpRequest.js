@@ -37,7 +37,6 @@ var XMLHttpRequest = (function () {
         this._request = null;
         this._response = null;
         this._options = null;
-        this._responseBody = "";
         this._readyState = XMLHttpRequest.UNSET;
         this._responseType = "";
         this.responseXML = null;
@@ -66,8 +65,9 @@ var XMLHttpRequest = (function () {
             else if (this._readyState !== XMLHttpRequest.DONE) {
                 return null;
             }
-            else if (this.responseType === "arraybuffer") {
-                var buffer = new Buffer(this._responseBody, "utf8");
+            else if (this.responseType.toLowerCase() === "arraybuffer") {
+                return this._responseBody;
+                var buffer = this._responseBody; // new Buffer(this._responseBody,"utf8");
                 var ab = new ArrayBuffer(buffer.length);
                 var view = new Uint8Array(ab);
                 for (var i = 0; i < buffer.length; ++i) {
@@ -166,13 +166,26 @@ var XMLHttpRequest = (function () {
         var loaded = 0;
         var totalSize = 0;
         var lengthComputeable = false;
-        this._responseBody = "";
+        this._responseBody = null;
         this._events.emit("loadstart", initProgressEvent("loadstart", this, loaded, totalSize, lengthComputeable));
-        var req = this._request = request(this._options.url, { method: options.method, headers: options.headers, body: data /*, auth: { username: options.username, password: options.password } */ }, function (error, result) {
+        var req = this._request = request(this._options.url, { method: options.method, headers: options.headers, body: data, encoding: null }, function (error, result, body) {
         });
         var timer = 0;
+        req.pause();
         req.on("data", function (data) {
-            _this._responseBody += data.toString("utf8");
+            if (_this._responseType.toLowerCase() == "arraybuffer") {
+                if (_this._responseBody == null) {
+                    _this._responseBody = data;
+                }
+                else {
+                    _this._responseBody = Buffer.concat([_this._responseBody, data]);
+                }
+            }
+            else {
+                if (_this._responseBody == null)
+                    _this._responseBody = "";
+                _this._responseBody += data.toString("utf8");
+            }
             if (_this._readyState < XMLHttpRequest.HEADERS_RECEIVED) {
                 return;
             }
@@ -201,8 +214,12 @@ var XMLHttpRequest = (function () {
             _this._events.emit("load", initProgressEvent("load", _this, loaded, totalSize, lengthComputeable));
         });
         req.on("response", function (message) {
+            /* if(this._responseType == "arrayBuffer"){
+              this._response.setEncoding('binary');
+          } else {
+                 this._response.setEncoding("utf8");
+          }*/
             _this._response = message;
-            _this._response.setEncoding("utf8");
             lengthComputeable = (totalSize = message.headers["content-length"] || 0) > 0;
             _this._setReadyState(XMLHttpRequest.HEADERS_RECEIVED, initEvent("readystatechange", _this));
         });
@@ -222,6 +239,7 @@ var XMLHttpRequest = (function () {
             _this._events.emit("abort", initProgressEvent("abort", _this, loaded, totalSize, lengthComputeable));
             _this._events.emit("loadend", initProgressEvent("loadend", _this, loaded, totalSize, lengthComputeable));
         });
+        req.resume();
     };
     XMLHttpRequest.prototype.setRequestHeader = function (header, value) {
         if (this.readyState !== XMLHttpRequest.OPENED) {
